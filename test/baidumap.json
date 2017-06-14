@@ -1,0 +1,58 @@
+{
+  "project": "百度地图API",
+  "type": "http",
+  "base": "http://api.map.baidu.com",
+  "desc": "百度地图的API的几个测试用例",
+  "tests": [
+    {
+      "case": "SearchInCity",
+      "desc": "测试百度地图API城市内检索关键词的功能",
+      "test": [
+        {
+          "url": "/place/v2/search",
+          "method": "GET",
+          "params": {
+            "query": "医院",
+            "page_size": 10,
+            "page_num": 0,
+            "scope": 1,
+            "region": "天津",
+            "output": "json",
+            "ak": "xZHugj45kkoO4PdBK6lwL3wX"
+          },
+          "validators": {
+            "eq": [2, 2]
+          }
+        }
+      ]
+    },
+    {
+      "case": "PlaceDetailService",
+      "desc": "测试百度地图位置详情服务的功能",
+      "setup": [],
+      "test": [
+        {
+          "url": "/place/v2/detail",
+          "method": "GET",
+          "resource":{
+            "file": "itest.xlsx",
+            "sheet": "baidumap",
+            "start": 1,
+            "end": 5
+          },
+          "params": {
+            "uid": "$resource.uid",
+            "page_num": "$resource.page_num",
+            "scope": 2,
+            "output": "json",
+            "ak": "xZHugj45kkoO4PdBK6lwL3wX"
+          },
+          "validators": {
+            "in": ["$resource.assert", "$res"],
+            "eq": ["22", "22"]
+          }
+        }
+      ]
+    }
+  ]
+}

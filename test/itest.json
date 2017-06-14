@@ -1,0 +1,33 @@
+{
+  "project": "baidu",
+  "type": "http",
+  "base": "http://baidu.com",
+  "tests": [
+    {
+      "case": "首页",
+      "setup": [
+        {
+          "url": "http://www.baidu.com",
+          "method": "GET",
+          "headers": {"Content-Type": "application/json"},
+          "data": {"a": "b"}
+        },
+        {}
+      ],
+      "test": [
+        {
+          "url": "http://www.baidu.com",
+          "method": "GET",
+          "resource": {
+            "file": "itest.xlsx",
+            "sheet": "itest",
+            "start": 1,
+            "end": 10
+          }
+        },
+        {}
+      ],
+      "teardown": []
+    }
+  ]
+}
