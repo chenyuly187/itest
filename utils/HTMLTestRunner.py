@@ -115,7 +115,7 @@ class Template_mixin(object):
     """
 
     STATUS = ['通过', '失败', '错误']
-    DEFAULT_TITLE = 'Unit Test Report'
+    DEFAULT_TITLE = '单元测试报告'
     DEFAULT_DESCRIPTION = ''
 
     # ------------------------------------------------------------------------
@@ -527,7 +527,6 @@ class _TestResult(TestResult):
             sys.stderr.write('F')
 
     def addSubTest(self, test, subtest, err):
-        print('-----------------------------------------------------')
         if err is not None:
             if getattr(self, 'failfast', False):
                 self.stop()
@@ -535,11 +534,10 @@ class _TestResult(TestResult):
                 self.failure_count += 1
                 # errors = self.failures
                 self.failures.append((subtest, self._exc_info_to_string(err, subtest)))
-                self._mirrorOutput = True
                 output = self.complete_output()
-                self.result.append((1, subtest, output+'\nSubTestCase Failed:\n'+str(subtest), self._exc_info_to_string(err, test)))
+                self.result.append((1, subtest, output+'\nSubTestCase Failed:\n'+str(subtest), self._exc_info_to_string(err, subtest)))
                 if self.verbosity > 1:
-                    sys.stderr.write('失败  -------------------')
+                    sys.stderr.write('失败  ')
                     sys.stderr.write(subtest.__str__())
                     sys.stderr.write('\n')
                 else:
@@ -547,21 +545,19 @@ class _TestResult(TestResult):
             else:
                 self.error_count += 1
                 errors = self.errors
-                errors.append((subtest, self._exc_info_to_string(err, test)))
-                self._mirrorOutput = True
+                errors.append((subtest, self._exc_info_to_string(err, subtest)))
                 output = self.complete_output()
-                self.result.append((2, test, output+'\nSubTestCase Error:\n'+str(subtest), self._exc_info_to_string(err, subtest)))
+                self.result.append((2, subtest, output+'\nSubTestCase Error:\n'+str(subtest), self._exc_info_to_string(err, subtest)))
                 if self.verbosity > 1:
                     sys.stderr.write('出错  ')
                     sys.stderr.write(subtest.__str__())
                     sys.stderr.write('\n')
                 else:
                     sys.stderr.write('E')
-            self._mirrorOutput = True
         else:
             self.success_count += 1
             output = self.complete_output()
-            self.result.append((0, test, output+'\nSubTestCase Pass:\n'+str(subtest), ''))
+            self.result.append((0, subtest, output+'\nSubTestCase Pass:\n'+str(subtest), ''))
             if self.verbosity > 1:
                 sys.stderr.write('通过  ')
                 sys.stderr.write(subtest.__str__())
@@ -569,7 +565,7 @@ class _TestResult(TestResult):
             else:
                 sys.stderr.write('.')
 
-            self.subtestlist.append(test)
+            self.subtestlist.append(subtest)
 
 
 class HTMLTestRunner(Template_mixin):
@@ -601,12 +597,12 @@ class HTMLTestRunner(Template_mixin):
         # Here at least we want to group them together by class.
         rmap = {}
         classes = []
-        for n,t,o,e in result_list:
-            cls = t.__class__
+        for n, t, o, e in result_list:
+            cls = t.name
             if cls not in rmap:
                 rmap[cls] = []
                 classes.append(cls)
-            rmap[cls].append((n,t,o,e))
+            rmap[cls].append((n, t, o, e))
         r = [(cls, rmap[cls]) for cls in classes]
         return r
 
@@ -618,17 +614,20 @@ class HTMLTestRunner(Template_mixin):
         startTime = str(self.startTime)[:19]
         duration = str(self.stopTime - self.startTime)
         status = []
-        if result.success_count: status.append(u'通过 %s' % result.success_count)
-        if result.failure_count: status.append(u'失败 %s' % result.failure_count)
-        if result.error_count:   status.append(u'错误 %s' % result.error_count  )
+        if result.success_count:
+            status.append('通过 %s' % result.success_count)
+        if result.failure_count:
+            status.append('失败 %s' % result.failure_count)
+        if result.error_count:
+            status.append('错误 %s' % result.error_count  )
         if status:
             status = ' '.join(status)
         else:
             status = 'none'
         return [
-            (u'开始时间', startTime),
-            (u'运行时长', duration),
-            (u'状态', status),
+            ('开始时间', startTime),
+            ('运行时长', duration),
+            ('状态', status),
         ]
 
     def generateReport(self, test, result):
@@ -646,7 +645,7 @@ class HTMLTestRunner(Template_mixin):
             report = report,
             ending = ending,
         )
-        self.stream.write(output.encode('utf8'))
+        self.stream.write(output.encode())
 
     def _generate_stylesheet(self):
         return self.STYLESHEET_TMPL
@@ -717,8 +716,8 @@ class HTMLTestRunner(Template_mixin):
         # if cid == 1: print type(o)
         # print e
         tid = (n == 0 and 'p' or 'f') + 't%s.%s' % (cid+1,tid+1)
-        name = t.id().split('.')[-1]
-        doc = t.shortDescription() or ""
+        # name = t.id().split('.')[-1]
+        # doc = t.shortDescription() or ""
 
         desc = t.__str__()  # 02.24 为了让HTML报告显示用例名而修改
         # desc = doc and ('%s: %s' % (name, doc)) or name

@@ -38,7 +38,7 @@
             "file": "itest.xlsx",
             "sheet": "baidumap",
             "start": 1,
-            "end": 1
+            "end": 3
           },
           "params": {
             "uid": "$resource.uid",

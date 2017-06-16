@@ -53,13 +53,10 @@ class Test(unittest.TestCase):
         pass
 
     def id(self):
-        return u"%s" % self._testMethodName
+        return "%s" % self._testMethodName
 
     def __str__(self):
-        return u"%s" % self.name
-
-    def __repr__(self):
-        return u"%s" % self.name
+        return "%s" % self.name
 
     @contextlib.contextmanager
     def subTest(self, msg=None, **params):
@@ -92,6 +89,16 @@ class Test(unittest.TestCase):
         finally:
             self._subtest = parent
 
+    def _feedErrorsToResult(self, result, errors):
+        for test, exc_info in errors:
+            if isinstance(test, _SubTest):
+                result.addSubTest(test.test_case, test, exc_info)
+            elif exc_info is not None:
+                if issubclass(exc_info[0], self.failureException):
+                    result.addFailure(test, exc_info)
+                else:
+                    result.addError(test, exc_info)
+
 
 class _SubTest(Test):
 
@@ -109,15 +116,13 @@ class _SubTest(Test):
     def _subDescription(self):
         parts = []
         if self._message:
-            parts.append(u"{0}".format(self._message))
+            parts.append("[{}]".format(self._message))
         if self.params:
-            l = []
-            for k, v in sorted(self.params.items()):
-                l.append(u"{0}={1}".format(k, json.dumps(json.loads(json.dumps(v)), ensure_ascii=False)))
-            params_desc = u', '.join(l)
-
-            parts.append(u"({0})".format(params_desc))
-        return u" ".join(parts) or u'(<subtest>)'
+            params_desc = ', '.join(
+                "{}={}".format(k, v)
+                for (k, v) in sorted(self.params.items()))
+            parts.append("({})".format(params_desc))
+        return " ".join(parts) or '(<subtest>)'
 
     def id(self):
         return u"{0} {1}".format(self.test_case.id(), self._subDescription())
@@ -244,8 +249,11 @@ class RestTest(Test):
                             logger.debug('test data: %s' % sub_data)  # debug
                         # test
                         self.before()
+                        print('[url]\n%s' % step_url)
+                        print('[send]\n%s' % (sub_params or sub_data))
                         res = HTTPClient(url=step_url, method=step_method, headers=step_headers).send(
                             params=sub_params, data=sub_data)
+                        print('[receive]\n %s' % res.content.decode())
 
                         # validate
                         step_validators = step.get('validators')
@@ -281,8 +289,11 @@ class RestTest(Test):
                     logger.debug('test data: %s' % step_data)
                 # test
                 self.before()
+                # print('[url]\n%s' % step_url)
+                # print('[send]\n%s' % (step_params or step_data))
                 res = HTTPClient(url=step_url, method=step_method, headers=step_headers).send(params=step_params,
                                                                                               data=step_data)
+                # print('[receive]\n %s' % res.content.decode())
                 # validate
                 step_validators = step.get('validators')
                 if step_validators:

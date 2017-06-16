@@ -141,8 +141,8 @@ class TestParser(object):
 
 class Runner(object):
     def __init__(self, project, api_type='http', desc='', runner='text', path=BASE_DIR, report=''):
-        self.title = u'%s 测试报告' % project
-        self.desc = u'测试类型：{1}，    项目描述：{2}'.format(project, api_type, desc)
+        self.title = '%s 测试报告' % project
+        self.desc = '测试类型：{1}，    项目描述：{2}'.format(project, api_type, desc)
         self.runner = runner
         self.path = path
         self.report = report
