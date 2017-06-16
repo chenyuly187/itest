@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-import unittest2
-from unittest2.case import _ShouldStop
-from client import HTTPClient
+import unittest
+from unittest.case import _ShouldStop
+from utils.client import HTTPClient, TCPClient
 from settings import *
-from file_reader import ExcelReader
-from utils_exception import DataFileNotAvailableException
+from utils.filereader import ExcelReader
+from utils.exceptions import DataFileNotAvailableException
 import contextlib
 import collections
 import json
+import re
 
 logger = logging.getLogger('itest')
-# todo 测试类基类处理、其他接口、UI测试类添加
 
 
-class Test(unittest2.TestCase):
+class Test(unittest.TestCase):
     def __init__(self, name, test, desc='', setup=None, teardown=None):
         super(Test, self).__init__(methodName='test_case')
         self.name = name
@@ -264,10 +264,13 @@ class RestTest(Test):
                                     else:
                                         if '$resource' in vvalue:
                                             asserts = [line.get(vvalue[10:]), res.content]
-
-                                    logger.debug(u'assert %s %s %s' % (
-                                        str(asserts[0]).decode('utf-8'), vtype, str(asserts[1]).decode('utf-8').strip()[:20]+u'...'))
-                                    self.validators[vtype](asserts[0], asserts[1])
+                                    logger.debug('assert %s %s %s' % (asserts[0], vtype, str(asserts[1]).strip()[:20]))
+                                    if isinstance(asserts[0], str) and isinstance(asserts[1], str):
+                                        self.validators[vtype](asserts[0].encode(), asserts[1].encode())
+                                    elif isinstance(asserts[0], str):
+                                        self.validators[vtype](asserts[0].encode(), asserts[1])
+                                    else:
+                                        self.validators[vtype](asserts[0], asserts[1])
 
                         self.after()
             else:  # just use json data
@@ -280,7 +283,7 @@ class RestTest(Test):
                 self.before()
                 res = HTTPClient(url=step_url, method=step_method, headers=step_headers).send(params=step_params,
                                                                                               data=step_data)
-                # todo validators
+                # validate
                 step_validators = step.get('validators')
                 if step_validators:
                     for vtype, vvalue in step_validators.items():
@@ -292,18 +295,121 @@ class RestTest(Test):
                             else:
                                 if '$resource' in str(vvalue):
                                     vvalue = [vvalue, res.content]
-                            logger.debug(u'assert %s %s %s' % (
-                                str(vvalue[0]).decode('utf-8'), vtype, str(vvalue[1]).decode('utf-8')))
-                            self.validators[vtype](vvalue[0], vvalue[1])
+                            logger.debug('assert %s %s %s' % (vvalue[0], vtype, str(vvalue[1]).strip()[:20]))
+                            if isinstance(vvalue[0], str) and isinstance(vvalue[1], str):
+                                self.validators[vtype](vvalue[0].encode(), vvalue[1].encode())
+                            elif isinstance(vvalue[0], str):
+                                self.validators[vtype](vvalue[0].encode(), vvalue[1])
+                            else:
+                                self.validators[vtype](vvalue[0], vvalue[1])
 
                 self.after()
 
 
-# todo SocketTest
 class SocketTest(Test):
     def __init__(self, name, test, ip='127.0.0.1', port=3030, desc='', setup=None, teardown=None):
         super(SocketTest, self).__init__(name=name, test=test, desc=desc, setup=setup, teardown=teardown)
         self.ip = ip
         self.port = port
+        self.client = TCPClient(domain=self.ip, port=self.port)
 
+    def tearDown(self):
+        self.client.close()
 
+    def test_case(self):
+        for step in self.test:
+            step_data = step.get('data', '')  # step data
+            step_resource = step.get('resource')
+            if step_resource:  # use excel as resource file
+                rfile = step_resource.get('file')
+                if os.path.exists(rfile):
+                    rfile = rfile
+                elif os.path.exists(BASE_DIR + '\\data\\' + rfile):
+                    rfile = BASE_DIR + '\\data\\' + rfile
+                else:
+                    raise DataFileNotAvailableException('File not found: %s' % rfile)
+                rsheet = step_resource.get('sheet', 0)
+                rstart = step_resource.get('start', 0)
+                rend = step_resource.get('end')
+
+                rdata = ExcelReader(rfile, rsheet).data
+                rstart = rstart - 1 if rstart > 0 else 0
+                if rend and len(rdata) >= rend:
+                    rdata = rdata[rstart: rend]
+                else:
+                    rdata = rdata[rstart:]
+
+                # debug
+                logger.debug('resource: %s' % str(step_resource))
+                logger.debug('excel data: %s' % str(rdata))
+
+                for num, line in enumerate(rdata):
+                    with self.subTest(msg='SubTest_%d' % (num + 1), data=line):  # SubTest
+                        logger.debug('---------- SubTest %d ----------' % (num + 1))  # debug
+                        sub_data = step_data
+                        if step_data:  # 用正则匹配里面的$resource.xxx$出来
+                            pattern = re.compile('\$resource\.(.*?)\$')
+                            for r in pattern.findall(step_data):
+                                r1 = line.get(r)
+                                if r1:
+                                    sub_data = pattern.sub(r1, sub_data, 1)
+                            logger.debug('test data: %s' % sub_data)  # debug
+                        # test
+                        res = self.client.send(sub_data)
+
+                        # validate
+                        step_validators = step.get('validators')
+                        if step_validators:
+                            for vtype, vvalue in step_validators.items():
+                                asserts = []
+                                if vtype in self.validators:
+                                    if isinstance(vvalue, list):
+                                        for vv in vvalue:
+                                            if '$resource' in vv:
+                                                asserts.append(line.get(vv[10:]))
+                                            elif '$res' in vv:
+                                                asserts.append(res)
+                                            else:
+                                                asserts.append(vv)
+                                    else:
+                                        if '$resource' in vvalue:
+                                            asserts = [line.get(vvalue[10:]), res]
+
+                                    logger.debug('assert %s %s %s' % (asserts[0], vtype, str(asserts[1]).strip()[:20]))
+                                    if isinstance(asserts[0], str) and isinstance(asserts[1], str):
+                                        self.validators[vtype](asserts[0].encode(), asserts[1].encode())
+                                    elif isinstance(asserts[0], str):
+                                        self.validators[vtype](asserts[0].encode(), asserts[1])
+                                    else:
+                                        self.validators[vtype](asserts[0], asserts[1])
+            else:
+                # debug
+                if step_data:
+                    logger.debug('test data: %s' % step_data)
+                # test
+                res = self.client.send(step_data)
+                # validate
+                step_validators = step.get('validators')
+                if step_validators:
+                    for vtype, vvalue in step_validators.items():
+                        asserts = []
+                        if vtype in self.validators:
+                            if isinstance(vvalue, list):
+                                for vv in vvalue:
+                                    if '$resource' in vv:
+                                        asserts.append(line.get(vv[10:]))
+                                    elif '$res' in vv:
+                                        asserts.append(res)
+                                    else:
+                                        asserts.append(vv)
+                            else:
+                                if '$resource' in vvalue:
+                                    asserts = [line.get(vvalue[10:]), res]
+
+                            logger.debug('assert %s %s %s' % (asserts[0], vtype, str(asserts[1]).strip()[:20]))
+                            if isinstance(asserts[0], str) and isinstance(asserts[1], str):
+                                self.validators[vtype](asserts[0].encode(), asserts[1].encode())
+                            elif isinstance(asserts[0], str):
+                                self.validators[vtype](asserts[0].encode(), asserts[1])
+                            else:
+                                self.validators[vtype](asserts[0], asserts[1])

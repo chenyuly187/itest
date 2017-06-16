@@ -1,0 +1,30 @@
+{
+  "project": "P2C2 Test",
+  "type": "tcp",
+  "ip": "192.168.6.63",
+  "port": 10011,
+  "desc": "测试tcp socket接口",
+  "tests": [
+    {
+      "case": "TestQuerySpotCommodityById",
+      "desc": "通过ID查询商品",
+      "test": [
+        {
+          "data": "[{\"action\": \"query_spot_commodity_by_id\", \"data\": {\"commodity_id\":\"$resource.commodity_id$\"}}]/**end**/",
+          "resource": {"file": "itest.xlsx", "sheet": "p2c2", "start": 1, "end": 3},
+          "validators": {"in": ["BRCM", "$res"]}
+        }
+      ]
+    },
+    {
+      "case": "TestGetResourceByOrderNo",
+      "desc": "通过ID查询商品",
+      "test": [
+        {
+          "data": "[{\"action\": \"get_resource_by_order_no\", \"data\": {\"order_no\":\"794\",\"trader_id\":\"333000666\"}}]/**end**/",
+          "validators": {"in": ["794", "$res"]}
+        }
+      ]
+    }
+  ]
+}

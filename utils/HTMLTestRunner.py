@@ -33,9 +33,9 @@ HTMLTestRunner is a counterpart to unittest's TextTestRunner. E.g.
     runner.run(my_test_suite)
 """
 import datetime
-import StringIO
+from io import StringIO
 import sys
-import unittest2
+import unittest
 from xml.sax import saxutils
 
 __version__ = "0.9.0"
@@ -114,14 +114,14 @@ class Template_mixin(object):
     +------------------------+
     """
 
-    STATUS = [u'通过', u'失败', u'错误']
-    DEFAULT_TITLE = u'Unit Test Report'
-    DEFAULT_DESCRIPTION = u''
+    STATUS = ['通过', '失败', '错误']
+    DEFAULT_TITLE = 'Unit Test Report'
+    DEFAULT_DESCRIPTION = ''
 
     # ------------------------------------------------------------------------
     # HTML Template
 
-    HTML_TMPL = u"""<?xml version="1.0" encoding="UTF-8"?>
+    HTML_TMPL = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -239,7 +239,7 @@ function showOutput(id, name) {
     # ------------------------------------------------------------------------
     # Stylesheet
 
-    STYLESHEET_TMPL = u"""
+    STYLESHEET_TMPL = """
 <link href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" type="text/css">
 <style type="text/css" media="screen">
 body        { font-family: Microsoft YaHei, verdana, arial, helvetica, sans-serif; font-size: 80%; }
@@ -330,7 +330,7 @@ a.popup_link:hover {
     # ------------------------------------------------------------------------
     # Heading
 
-    HEADING_TMPL = u"""<div class='page-header'>
+    HEADING_TMPL = """<div class='page-header'>
 <h1>%(title)s</h1>
 %(parameters)s
 </div>
@@ -338,14 +338,14 @@ a.popup_link:hover {
 
 """  # variables: (title, parameters, description)
 
-    HEADING_ATTRIBUTE_TMPL = u"""<p class='attribute'><strong>%(name)s:</strong> %(value)s</p>
+    HEADING_ATTRIBUTE_TMPL = """<p class='attribute'><strong>%(name)s:</strong> %(value)s</p>
 """  # variables: (name, value)
 
     # ------------------------------------------------------------------------
     # Report
     #
 
-    REPORT_TMPL = u"""
+    REPORT_TMPL = """
 <div class="btn-group btn-group-sm">
 <button class="btn btn-default" onclick='javascript:showCase(0)'>总结</button>
 <button class="btn btn-default" onclick='javascript:showCase(1)'>失败</button>
@@ -381,8 +381,7 @@ a.popup_link:hover {
 </table>
 """  # variables: (test_list, count, Pass, fail, error)
 
-    # 这里这个desc需要调整下，输出case的name和desc
-    REPORT_CLASS_TMPL = u"""
+    REPORT_CLASS_TMPL = """
 <tr class='%(style)s'>
     <td>%(desc)s</td>
     <td>%(count)s</td>
@@ -393,8 +392,7 @@ a.popup_link:hover {
 </tr>
 """  # variables: (style, desc, count, Pass, fail, error, cid)
 
-    # 这里的desc需要调整下，输出内容仅输出该用例的信息
-    REPORT_TEST_WITH_OUTPUT_TMPL = u"""
+    REPORT_TEST_WITH_OUTPUT_TMPL = """
 <tr id='%(tid)s' class='%(Class)s'>
     <td class='%(style)s' width='40%%'><div class='testcase'>%(desc)s</div></td>
     <td colspan='5' align='center'>
@@ -414,7 +412,7 @@ a.popup_link:hover {
 </tr>
 """  # variables: (tid, Class, style, desc, status)
 
-    REPORT_TEST_NO_OUTPUT_TMPL = u"""
+    REPORT_TEST_NO_OUTPUT_TMPL = """
 <tr id='%(tid)s' class='%(Class)s'>
     <td class='%(style)s'><div class='testcase'>%(desc)s</div></td>
     <td colspan='5' align='center'>%(status)s</td>
@@ -422,19 +420,19 @@ a.popup_link:hover {
 """  # variables: (tid, Class, style, desc, status)
 
     # %(id)s: %(output)s
-    REPORT_TEST_OUTPUT_TMPL = u"""
+    REPORT_TEST_OUTPUT_TMPL = """
 %(output)s
 """  # variables: (id, output)
 
     # ------------------------------------------------------------------------
     # ENDING
 
-    ENDING_TMPL = u"""<div id='ending'>&nbsp;</div>"""
+    ENDING_TMPL = """<div id='ending'>&nbsp;</div>"""
 
 # -------------------- The end of the Template class -------------------
 
 
-TestResult = unittest2.TestResult
+TestResult = unittest.TestResult
 
 
 class _TestResult(TestResult):
@@ -464,7 +462,7 @@ class _TestResult(TestResult):
 
     def startTest(self, test):
         TestResult.startTest(self, test)
-        self.outputBuffer = StringIO.StringIO()
+        self.outputBuffer = StringIO()
         stdout_redirector.fp = self.outputBuffer
         stderr_redirector.fp = self.outputBuffer
         self.stdout0 = sys.stdout
@@ -496,7 +494,7 @@ class _TestResult(TestResult):
         output = self.complete_output()
         self.result.append((0, test, output, ''))
         if self.verbosity > 1:
-            sys.stderr.write(u'通过  ')
+            sys.stderr.write('通过  ')
             sys.stderr.write(test.__str__())
             sys.stderr.write('\n')
         else:
@@ -509,7 +507,7 @@ class _TestResult(TestResult):
         output = self.complete_output()
         self.result.append((2, test, output, _exc_str))
         if self.verbosity > 1:
-            sys.stderr.write(u'出错  ')
+            sys.stderr.write('出错  ')
             sys.stderr.write(test.__str__())
             sys.stderr.write('\n')
         else:
@@ -522,56 +520,56 @@ class _TestResult(TestResult):
         output = self.complete_output()
         self.result.append((1, test, output, _exc_str))
         if self.verbosity > 1:
-            sys.stderr.write(u'失败  ')
+            sys.stderr.write('失败  ')
             sys.stderr.write(test.__str__())
             sys.stderr.write('\n')
         else:
             sys.stderr.write('F')
 
-    # def addSubTest(self, test, subtest, err):
-    #     print '-----------------------------------------------------'
-    #     if err is not None:
-    #         if getattr(self, 'failfast', False):
-    #             self.stop()
-    #         if issubclass(err[0], test.failureException):
-    #             self.failure_count += 1
-    #             # errors = self.failures
-    #             self.failures.append((subtest, self._exc_info_to_string(err, subtest)))
-    #             self._mirrorOutput = True
-    #             output = self.complete_output()
-    #             self.result.append((1, subtest, output+'\nSubTestCase Failed:\n'+str(subtest), self._exc_info_to_string(err, test)))
-    #             if self.verbosity > 1:
-    #                 sys.stderr.write(u'失败  -------------------')
-    #                 sys.stderr.write(subtest.__str__())
-    #                 sys.stderr.write('\n')
-    #             else:
-    #                 sys.stderr.write('F')
-    #         else:
-    #             self.error_count += 1
-    #             errors = self.errors
-    #             errors.append((subtest, self._exc_info_to_string(err, test)))
-    #             self._mirrorOutput = True
-    #             output = self.complete_output()
-    #             self.result.append((2, test, output+'\nSubTestCase Error:\n'+str(subtest), self._exc_info_to_string(err, subtest)))
-    #             if self.verbosity > 1:
-    #                 sys.stderr.write(u'出错  ')
-    #                 sys.stderr.write(subtest.__str__())
-    #                 sys.stderr.write('\n')
-    #             else:
-    #                 sys.stderr.write('E')
-    #         self._mirrorOutput = True
-    #     else:
-    #         self.success_count += 1
-    #         output = self.complete_output()
-    #         self.result.append((0, test, output+'\nSubTestCase Pass:\n'+str(subtest), ''))
-    #         if self.verbosity > 1:
-    #             sys.stderr.write(u'通过  ')
-    #             sys.stderr.write(subtest.__str__())
-    #             sys.stderr.write('\n')
-    #         else:
-    #             sys.stderr.write('.')
-    #
-    #         self.subtestlist.append(test)
+    def addSubTest(self, test, subtest, err):
+        print('-----------------------------------------------------')
+        if err is not None:
+            if getattr(self, 'failfast', False):
+                self.stop()
+            if issubclass(err[0], test.failureException):
+                self.failure_count += 1
+                # errors = self.failures
+                self.failures.append((subtest, self._exc_info_to_string(err, subtest)))
+                self._mirrorOutput = True
+                output = self.complete_output()
+                self.result.append((1, subtest, output+'\nSubTestCase Failed:\n'+str(subtest), self._exc_info_to_string(err, test)))
+                if self.verbosity > 1:
+                    sys.stderr.write('失败  -------------------')
+                    sys.stderr.write(subtest.__str__())
+                    sys.stderr.write('\n')
+                else:
+                    sys.stderr.write('F')
+            else:
+                self.error_count += 1
+                errors = self.errors
+                errors.append((subtest, self._exc_info_to_string(err, test)))
+                self._mirrorOutput = True
+                output = self.complete_output()
+                self.result.append((2, test, output+'\nSubTestCase Error:\n'+str(subtest), self._exc_info_to_string(err, subtest)))
+                if self.verbosity > 1:
+                    sys.stderr.write('出错  ')
+                    sys.stderr.write(subtest.__str__())
+                    sys.stderr.write('\n')
+                else:
+                    sys.stderr.write('E')
+            self._mirrorOutput = True
+        else:
+            self.success_count += 1
+            output = self.complete_output()
+            self.result.append((0, test, output+'\nSubTestCase Pass:\n'+str(subtest), ''))
+            if self.verbosity > 1:
+                sys.stderr.write('通过  ')
+                sys.stderr.write(subtest.__str__())
+                sys.stderr.write('\n')
+            else:
+                sys.stderr.write('.')
+
+            self.subtestlist.append(test)
 
 
 class HTMLTestRunner(Template_mixin):
@@ -595,7 +593,7 @@ class HTMLTestRunner(Template_mixin):
         test(result)
         self.stopTime = datetime.datetime.now()
         self.generateReport(test, result)
-        print >>sys.stderr, '\nTime Elapsed: %s' % (self.stopTime-self.startTime)
+        print('\nTime Elapsed: %s' % (self.stopTime-self.startTime), file=sys.stderr)
         return result
 
     def sortResult(self, result_list):
@@ -605,7 +603,7 @@ class HTMLTestRunner(Template_mixin):
         classes = []
         for n,t,o,e in result_list:
             cls = t.__class__
-            if not rmap.has_key(cls):
+            if cls not in rmap:
                 rmap[cls] = []
                 classes.append(cls)
             rmap[cls].append((n,t,o,e))
@@ -727,23 +725,7 @@ class HTMLTestRunner(Template_mixin):
 
         tmpl = has_output and self.REPORT_TEST_WITH_OUTPUT_TMPL or self.REPORT_TEST_NO_OUTPUT_TMPL
 
-        # o and e should be byte string because they are collected from stdout and stderr?
-        if isinstance(o,str):
-            # TODO: some problem with 'string_escape': it escape \n and mess up formating
-            # uo = unicode(o.encode('string_escape'))
-            # uo = o.decode('latin-1')
-            uo = o.decode('utf-8')
-        else:
-            uo = o
-        if isinstance(e,str):
-            # TODO: some problem with 'string_escape': it escape \n and mess up formating
-            # ue = unicode(e.encode('string_escape'))
-            # ue = e.decode('latin-1')
-            ue = e.decode('utf-8')
-        else:
-            ue = e
-
-        script = self.REPORT_TEST_OUTPUT_TMPL % dict(id=tid, output=saxutils.escape(uo+ue))
+        script = self.REPORT_TEST_OUTPUT_TMPL % dict(id=tid, output=saxutils.escape(o+e))
 
         row = tmpl % dict(
             tid=tid,
@@ -768,7 +750,7 @@ class HTMLTestRunner(Template_mixin):
 # Note: Reuse unittest.TestProgram to launch test. In the future we may
 # build our own launcher to support more specific command line
 # parameters like test title, CSS, etc.
-class TestProgram(unittest2.TestProgram):
+class TestProgram(unittest.TestProgram):
     """
     A variation of the unittest.TestProgram. Please refer to the base
     class for command line parameters.
@@ -779,7 +761,7 @@ class TestProgram(unittest2.TestProgram):
         # we have to instantiate HTMLTestRunner before we know self.verbosity.
         if self.testRunner is None:
             self.testRunner = HTMLTestRunner(verbosity=self.verbosity)
-        unittest2.TestProgram.runTests(self)
+        unittest.TestProgram.runTests(self)
 
 main = TestProgram
 

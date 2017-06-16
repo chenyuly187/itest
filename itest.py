@@ -4,6 +4,7 @@ import getopt
 import json
 from settings import *
 import datetime
+from utils.tests import RestTest, SocketTest
 
 logger = logging.getLogger('itest')
 
@@ -44,7 +45,7 @@ class TestProgram(object):
             options, args = getopt.getopt(argv[1:], 'hHp:f:r:tw', long_opts)
             for opt, value in options:
                 if opt in ('-h', '-H', '--help'):
-                    print usage
+                    print(usage)
                 elif opt in ('-p', '--path'):
                     self.path = value
                     logger.debug('Set path: %s' % self.path)
@@ -68,17 +69,16 @@ class TestProgram(object):
                     self.runner = 'web'
                     logger.debug('Set HTMLTestRunner')
                 else:
-                    print usage
-        except getopt.error, msg:
-            print msg
-            print usage
+                    print(usage)
+        except getopt.error as msg:
+            print(msg)
+            print(usage)
             sys.exit(0)
 
 
 ##################################################
 #                    test
 ##################################################
-from utils.tests import RestTest
 testcases = []
 
 
@@ -90,7 +90,8 @@ class TestParser(object):
         self.desc = ''
 
     def parse(self):
-        parsed = json.load(fp=file(self.testfile))
+        with open(self.testfile, 'rb') as fp:
+            parsed = json.load(fp=fp)
 
         try:
             self.project = parsed['project']
@@ -121,7 +122,19 @@ class TestParser(object):
                 testcases.append(r)
         elif self.api_type in ('tcp', 'socket'):
             # socket interface (TCP protocol)
-            pass
+            ip = parsed.get('ip', '127.0.0.1')
+            port = parsed.get('port', 3000)
+            for test in tests:
+                case = test.get('case', 'Unnamed')
+                case_desc = test.get('desc', '')
+                logger.debug('case: %s, desc: %s' % (case, case_desc))
+                # setup teardown test method
+                setup = test.get('setup')
+                teardown = test.get('teardown')
+                tcase = test.get('test')
+
+                r = SocketTest(name=case, desc=case_desc, ip=ip, port=port, test=tcase, setup=setup, teardown=teardown)
+                testcases.append(r)
         else:
             pass
 
@@ -135,25 +148,30 @@ class Runner(object):
         self.report = report
 
     def run(self, tests):
-        import unittest2
-        suite = unittest2.TestSuite()
+        import unittest
+        suite = unittest.TestSuite()
         suite.addTests(tests)
         if self.runner == 'text':
-            unittest2.TextTestRunner(verbosity=2).run(suite)
+            unittest.TextTestRunner(verbosity=2).run(suite)
         elif self.runner == 'web':
             from utils.HTMLTestRunner import HTMLTestRunner, stdout_redirector
-            stream = file(
-                self.path + '\\report\\' + u'\{0}_{1}.html'.format(self.report, datetime.datetime.now().strftime('%Y%m%d%H%M%S')),
-                'wb') if self.report else sys.stdout
-            HTMLTestRunner(stream=stream,
-                           title=self.title,
-                           description=self.desc,
-                           verbosity=2).run(suite)
+            if self.report:
+                with open(self.path + '\\report\\' + u'\{0}_{1}.html'.format(self.report, datetime.datetime.now().strftime('%Y%m%d%H%M%S')),'wb') as stream:
+                    HTMLTestRunner(stream=stream,
+                                   title=self.title,
+                                   description=self.desc,
+                                   verbosity=2).run(suite)
+            else:
+                stream = sys.stdout
+                HTMLTestRunner(stream=stream,
+                               title=self.title,
+                               description=self.desc,
+                               verbosity=2).run(suite)
 
 
 if __name__ == '__main__':
-    argvs = sys.argv
-    # argvs = ['itest.py', '-f', 'baidumap.json', '-t', '-r', 'baidumap']
+    # argvs = sys.argv
+    argvs = ['itest.py', '-f', 'baidumap.json', '-w', '-r', 'baidumap']
     tp = TestProgram()
     tp.parse_args(argvs)
 

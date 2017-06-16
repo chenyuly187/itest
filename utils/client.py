@@ -2,8 +2,7 @@
 
 import requests
 import socket
-from suds.client import Client
-from utils_exception import UnSupportMethod
+from utils.exceptions import UnSupportMethod
 from settings import *
 
 METHODS = ['GET', 'POST', 'HEAD', 'TRACE', 'PUT', 'DELETE', 'OPTIONS', 'CONNECT']
@@ -36,7 +35,7 @@ class HTTPClient(object):
     def _check_method(self):
         """检查传入的method是否可用。"""
         if self.method not in METHODS:
-            logger.exception(UnSupportMethod(u'不支持的method:{0}，请检查传入参数！'.format(self.method)))
+            logger.exception(UnSupportMethod('不支持的method:{0}，请检查传入参数！'.format(self.method)))
         else:
             return True
 
@@ -46,7 +45,7 @@ class HTTPClient(object):
             response = self.session.request(method=self.method, url=self.url, params=params, data=data, **kwargs)
             logger.debug('{0} {1}.'.format(self.method, self.url))
             if response:
-                logger.debug(u'request success: {0}\n{1}'.format(response, response.content.strip().decode('utf-8')))
+                logger.debug('request success: {0}\n{1}'.format(response, response.content.strip()))
                 return response
             else:
                 logger.error('request failed: get None')
@@ -78,14 +77,14 @@ class TCPClient(object):
         self.connect()
         if self.connected:
             try:
-                self._sock.send(send_string)
+                self._sock.send(send_string.encode())
                 logger.debug('TCPClient Send {0}'.format(send_string))
             except socket.error as e:
                 logger.exception(e)
 
             try:
-                rec = self._sock.recv(self.max_receive).decode('raw-unicode-escape').encode('utf-8')
-                logger.debug(u'TCPClient received {0}'.format(rec.decode('utf-8')))
+                rec = self._sock.recv(self.max_receive).decode()
+                logger.debug('TCPClient received {0}'.format(rec))
                 return rec
             except socket.error as e:
                 logger.exception(e)
@@ -99,29 +98,17 @@ class TCPClient(object):
 # TODO WebService  socketIO  WebSocket
 
 
-class WebServiceClient(object):
-    # todo complete client
-
-    def __init__(self, url):
-
-        self.client = Client(url)
-
-
 # if __name__ == '__main__':
 #     boce = TCPClient('192.168.6.63', 10011)
 #     s = '[{"action": "query_spot_commodity_by_id", "data": {"commodity_id":"BRCM"}}]/**end**/'
 #     r = boce.send(s)
-#     print r
+#     print(r)
 #     boce.close()
 
 
 # if __name__ == '__main__':
 #     sender = HTTPClient('http://www.baidu.com', 'get')
 #     res = sender.send()
-#     print res.status_code
-#     print res.content
+#     print(res.status_code)
+#     print(res.content)
 
-# if __name__ == '__main__':
-#     c = WebServiceClient('http://ws.webxml.com.cn/WebServices/MobileCodeWS.asmx?WSDL')
-#     print c.client
-#     print c.client.service.getMobileCodeInfo('1560205', '')

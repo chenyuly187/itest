@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import yaml
 from xlrd import open_workbook
-from utils_exception import DataFileNotAvailableException, DataError, SheetTypeError, SheetError
+from utils.exceptions import DataFileNotAvailableException, DataError, SheetTypeError, SheetError
 from xml.etree.ElementTree import ElementTree
 from settings import *
 
@@ -31,7 +31,7 @@ class ExcelReader(object):
 
     def _sheet(self):
         """Return sheet"""
-        if type(self.sheet_locator) not in [int, str, unicode]:
+        if type(self.sheet_locator) not in [int, str]:
             raise SheetTypeError('Please pass in <type \'int\'> or <type \'str\'>, not {0}'.format(type(self.sheet_locator)))
         elif type(self.sheet_locator) == int:
             try:
@@ -67,8 +67,7 @@ class ExcelReader(object):
         # zip title and rows
         for col in range(1, sheet.nrows):
             s1 = sheet.row_values(col)
-            s2 = [unicode(s).encode('utf-8') for s in s1]  # utf-8 encoding
-            data.append(dict(zip(title, s2)))
+            data.append(dict(zip(title, s1)))
         return data
 
     @property

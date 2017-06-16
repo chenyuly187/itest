@@ -22,16 +22,16 @@ LOGGING = {
             'filename': '%s/log/itest.log' % BASE_DIR,
             'formatter': 'standard'
         },
-        # 'console': {
-        #     'level': 'INFO',
-        #     'class': 'logging.StreamHandler',
-        #     'formatter': 'standard',
-        #     # 'stream': stdout_redirector
-        # }
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+            # 'stream': stdout_redirector
+        }
     },
     'loggers': {
         'itest': {
-            'handlers': ['file_handler'],
+            'handlers': ['file_handler', 'console'],
             'level': 'DEBUG',
             'propagate': True
         }

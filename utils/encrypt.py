@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import hashlib
 import logging
-from utils_exception import EncryptError
+from utils.exceptions import EncryptError
 
 
 logger = logging.getLogger('itest')
@@ -35,11 +35,11 @@ def encrypt(string, salt='', encrypt_way='MD5'):
     elif encrypt_way.upper() == 'SHA1':
         hash_string = hashlib.sha1()
     else:
-        logger.exception(EncryptError(u'请输入正确的加密方式，目前仅支持 MD5 或 SHA1'))
+        logger.exception(EncryptError('请输入正确的加密方式，目前仅支持 MD5 或 SHA1'))
         return False
 
-    hash_string.update(string)
+    hash_string.update(string.encode())
     return hash_string.hexdigest()
 
 if __name__ == '__main__':
-    print encrypt('100000307111111')
+    print(encrypt('100000307111111'))

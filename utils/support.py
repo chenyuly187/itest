@@ -129,19 +129,19 @@ class OrganizationCode(object):
                 return False
 
 
-if __name__ == '__main__':
-    # print save_time()
-    # print save_date()
-    # print random_phone_number()
-    # print random_string()
-    # print random_string(8)
-    # print random_number_str(18)
-
-    for i in range(10):
-        rand_or = OrganizationCode()
-        print rand_or.code
-    # print OrganizationCode('WV0X1KYT-X').check_organization_code()
-    # print OrganizationCode('WV0X1KYT-5').check_organization_code()
-    # print OrganizationCode('WV0X1KYT-50').check_organization_code()
-    # print OrganizationCode('WV0X1KY@-5').check_organization_code()
-    # print OrganizationCode('WV0X1KYTX').check_organization_code()
+# if __name__ == '__main__':
+#     print(save_time())
+#     print(save_date())
+#     print(random_phone_number())
+#     print(random_string())
+#     print(random_string(8))
+#     print(random_number_str(18))
+#
+#     for i in range(10):
+#         rand_or = OrganizationCode()
+#         print(rand_or.code)
+#     print(OrganizationCode('WV0X1KYT-X').check_organization_code())
+#     print(OrganizationCode('WV0X1KYT-5').check_organization_code())
+#     print(OrganizationCode('WV0X1KYT-50').check_organization_code())
+#     print(OrganizationCode('WV0X1KY@-5').check_organization_code())
+#     print(OrganizationCode('WV0X1KYTX').check_organization_code())
