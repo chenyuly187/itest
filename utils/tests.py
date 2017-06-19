@@ -9,7 +9,7 @@ import contextlib
 import collections
 import json
 import re
-
+from .validators import *
 logger = logging.getLogger('itest')
 
 
@@ -22,13 +22,7 @@ class Test(unittest.TestCase):
         self.test = test
         self.teardown = teardown
         # validator map
-        self.validators = {
-            "in": self.assertIn,
-            "eq": self.assertEqual,
-            "ls": self.assertLess,
-            "lq": self.assertLessEqual,
-            "not_in": self.assertNotIn,
-        }
+        self.validators = VALIDATORS
 
         self._testMethodDoc = desc
 
@@ -249,11 +243,11 @@ class RestTest(Test):
                             logger.debug('test data: %s' % sub_data)  # debug
                         # test
                         self.before()
-                        print('[url]\n%s' % step_url)
-                        print('[send]\n%s' % (sub_params or sub_data))
+                        # print('[url]\n%s' % step_url)
+                        # print('[send]\n%s' % (sub_params or sub_data))
                         res = HTTPClient(url=step_url, method=step_method, headers=step_headers).send(
                             params=sub_params, data=sub_data)
-                        print('[receive]\n %s' % res.content.decode())
+                        # print('[receive]\n %s' % res.content.decode())
 
                         # validate
                         step_validators = step.get('validators')
@@ -272,13 +266,8 @@ class RestTest(Test):
                                     else:
                                         if '$resource' in vvalue:
                                             asserts = [line.get(vvalue[10:]), res.content]
-                                    logger.debug('assert %s %s %s' % (asserts[0], vtype, str(asserts[1]).strip()[:20]))
-                                    if isinstance(asserts[0], str) and isinstance(asserts[1], str):
-                                        self.validators[vtype](asserts[0].encode(), asserts[1].encode())
-                                    elif isinstance(asserts[0], str):
-                                        self.validators[vtype](asserts[0].encode(), asserts[1])
-                                    else:
-                                        self.validators[vtype](asserts[0], asserts[1])
+                                    logger.debug('assert %s %s %s' % (asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
+                                    self.validators[vtype](asserts[0], asserts[1])
 
                         self.after()
             else:  # just use json data
@@ -306,13 +295,9 @@ class RestTest(Test):
                             else:
                                 if '$resource' in str(vvalue):
                                     vvalue = [vvalue, res.content]
-                            logger.debug('assert %s %s %s' % (vvalue[0], vtype, str(vvalue[1]).strip()[:20]))
-                            if isinstance(vvalue[0], str) and isinstance(vvalue[1], str):
-                                self.validators[vtype](vvalue[0].encode(), vvalue[1].encode())
-                            elif isinstance(vvalue[0], str):
-                                self.validators[vtype](vvalue[0].encode(), vvalue[1])
-                            else:
-                                self.validators[vtype](vvalue[0], vvalue[1])
+                                    logger.debug('assert %s %s %s' % (
+                                    asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
+                            self.validators[vtype](vvalue[0], vvalue[1])
 
                 self.after()
 
@@ -386,13 +371,9 @@ class SocketTest(Test):
                                         if '$resource' in vvalue:
                                             asserts = [line.get(vvalue[10:]), res]
 
-                                    logger.debug('assert %s %s %s' % (asserts[0], vtype, str(asserts[1]).strip()[:20]))
-                                    if isinstance(asserts[0], str) and isinstance(asserts[1], str):
-                                        self.validators[vtype](asserts[0].encode(), asserts[1].encode())
-                                    elif isinstance(asserts[0], str):
-                                        self.validators[vtype](asserts[0].encode(), asserts[1])
-                                    else:
-                                        self.validators[vtype](asserts[0], asserts[1])
+                                            logger.debug('assert %s %s %s' % (
+                                            asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
+                                    self.validators[vtype](asserts[0], asserts[1])
             else:
                 # debug
                 if step_data:
@@ -417,10 +398,6 @@ class SocketTest(Test):
                                 if '$resource' in vvalue:
                                     asserts = [line.get(vvalue[10:]), res]
 
-                            logger.debug('assert %s %s %s' % (asserts[0], vtype, str(asserts[1]).strip()[:20]))
-                            if isinstance(asserts[0], str) and isinstance(asserts[1], str):
-                                self.validators[vtype](asserts[0].encode(), asserts[1].encode())
-                            elif isinstance(asserts[0], str):
-                                self.validators[vtype](asserts[0].encode(), asserts[1])
-                            else:
-                                self.validators[vtype](asserts[0], asserts[1])
+                                    logger.debug('assert %s %s %s' % (
+                                    asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
+                            self.validators[vtype](asserts[0], asserts[1])

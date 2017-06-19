@@ -45,7 +45,7 @@ class HTTPClient(object):
             response = self.session.request(method=self.method, url=self.url, params=params, data=data, **kwargs)
             logger.debug('{0} {1}.'.format(self.method, self.url))
             if response:
-                logger.debug('request success: {0}\n{1}'.format(response, response.content.strip()))
+                logger.debug('request success: {0}\n{1}'.format(response, response.content.strip().decode()))
                 return response
             else:
                 logger.error('request failed: get None')
