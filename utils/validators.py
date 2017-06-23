@@ -1,6 +1,6 @@
 
 
-class FailureException(Exception):
+class FailureException(AssertionError):
     """ Validate Failed """
     pass
 

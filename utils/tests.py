@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import unittest
-from unittest.case import _ShouldStop
 from utils.client import HTTPClient, TCPClient
 from settings import *
 from utils.filereader import ExcelReader
@@ -11,6 +10,12 @@ import json
 import re
 from .validators import *
 logger = logging.getLogger('itest')
+
+
+class _ShouldStop(Exception):
+    """
+    The test should stop.
+    """
 
 
 class Test(unittest.TestCase):
@@ -252,22 +257,24 @@ class RestTest(Test):
                         # validate
                         step_validators = step.get('validators')
                         if step_validators:
-                            for vtype, vvalue in step_validators.items():
-                                asserts = []
-                                if vtype in self.validators:
-                                    if isinstance(vvalue, list):
-                                        for vv in vvalue:
-                                            if '$resource' in vv:
-                                                asserts.append(line.get(vv[10:]))
-                                            elif '$res' in vv:
-                                                asserts.append(res.content)
-                                            else:
-                                                asserts.append(vv)
-                                    else:
-                                        if '$resource' in vvalue:
+                            for step_validator in step_validators:
+                                for vtype, vvalue in step_validator.items():
+                                    asserts = []
+                                    if vtype in self.validators:
+                                        if isinstance(vvalue, list):
+                                            for vv in vvalue:
+                                                if '$resource' in vv:
+                                                    asserts.append(line.get(vv[10:]))
+                                                elif '$res' in vv:
+                                                    asserts.append(res.content)
+                                                else:
+                                                    asserts.append(vv)
+                                        elif '$resource' in vvalue:
                                             asserts = [line.get(vvalue[10:]), res.content]
-                                    logger.debug('assert %s %s %s' % (asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
-                                    self.validators[vtype](asserts[0], asserts[1])
+                                        else:
+                                            asserts = [vvalue, res.content]
+                                        logger.debug('assert %s %s %s' % (asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
+                                        self.validators[vtype](asserts[0], asserts[1])
 
                         self.after()
             else:  # just use json data
@@ -286,18 +293,17 @@ class RestTest(Test):
                 # validate
                 step_validators = step.get('validators')
                 if step_validators:
-                    for vtype, vvalue in step_validators.items():
-                        if vtype in self.validators:
-                            if isinstance(vvalue, list):
-                                for i, vv in enumerate(vvalue):
-                                    if '$res' in str(vv):
-                                        vvalue[i] = res.content
-                            else:
-                                if '$resource' in str(vvalue):
-                                    vvalue = [vvalue, res.content]
-                                    logger.debug('assert %s %s %s' % (
-                                    asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
-                            self.validators[vtype](vvalue[0], vvalue[1])
+                    for step_validator in step_validators:
+                        for vtype, vvalue in step_validator.items():
+                            if vtype in self.validators:
+                                if isinstance(vvalue, list):
+                                    for i, vv in enumerate(vvalue):
+                                        if '$res' in str(vv):
+                                            vvalue[i] = res.content
+                                else:
+                                    asserts = [vvalue, res.content]
+                                logger.debug('assert %s %s %s' % (asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
+                                self.validators[vtype](asserts[0], asserts[1])
 
                 self.after()
 
@@ -356,24 +362,25 @@ class SocketTest(Test):
                         # validate
                         step_validators = step.get('validators')
                         if step_validators:
-                            for vtype, vvalue in step_validators.items():
-                                asserts = []
-                                if vtype in self.validators:
-                                    if isinstance(vvalue, list):
-                                        for vv in vvalue:
-                                            if '$resource' in vv:
-                                                asserts.append(line.get(vv[10:]))
-                                            elif '$res' in vv:
-                                                asserts.append(res)
-                                            else:
-                                                asserts.append(vv)
-                                    else:
-                                        if '$resource' in vvalue:
+                            for step_validator in step_validators:
+                                for vtype, vvalue in step_validator.items():
+                                    asserts = []
+                                    if vtype in self.validators:
+                                        if isinstance(vvalue, list):
+                                            for vv in vvalue:
+                                                if '$resource' in vv:
+                                                    asserts.append(line.get(vv[10:]))
+                                                elif '$res' in vv:
+                                                    asserts.append(res)
+                                                else:
+                                                    asserts.append(vv)
+                                        elif '$resource' in vvalue:
                                             asserts = [line.get(vvalue[10:]), res]
+                                        else:
+                                            asserts = [vvalue, res]
 
-                                            logger.debug('assert %s %s %s' % (
-                                            asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
-                                    self.validators[vtype](asserts[0], asserts[1])
+                                        logger.debug('assert %s %s %s' % (asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
+                                        self.validators[vtype](asserts[0], asserts[1])
             else:
                 # debug
                 if step_data:
@@ -383,21 +390,21 @@ class SocketTest(Test):
                 # validate
                 step_validators = step.get('validators')
                 if step_validators:
-                    for vtype, vvalue in step_validators.items():
-                        asserts = []
-                        if vtype in self.validators:
-                            if isinstance(vvalue, list):
-                                for vv in vvalue:
-                                    if '$resource' in vv:
-                                        asserts.append(line.get(vv[10:]))
-                                    elif '$res' in vv:
-                                        asserts.append(res)
-                                    else:
-                                        asserts.append(vv)
-                            else:
-                                if '$resource' in vvalue:
-                                    asserts = [line.get(vvalue[10:]), res]
+                    for step_validator in step_validators:
+                        for vtype, vvalue in step_validator.items():
+                            asserts = []
+                            if vtype in self.validators:
+                                if isinstance(vvalue, list):
+                                    for vv in vvalue:
+                                        if '$resource' in vv:
+                                            asserts.append(line.get(vv[10:]))
+                                        elif '$res' in vv:
+                                            asserts.append(res)
+                                        else:
+                                            asserts.append(vv)
+                                else:
+                                    if '$resource' in vvalue:
+                                        asserts = [line.get(vvalue[10:]), res]
 
-                                    logger.debug('assert %s %s %s' % (
-                                    asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
-                            self.validators[vtype](asserts[0], asserts[1])
+                                logger.debug('assert %s %s %s' % (asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
+                                self.validators[vtype](asserts[0], asserts[1])

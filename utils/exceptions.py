@@ -11,6 +11,10 @@ class FileException(Error):
     pass
 
 
+class FileTypeNotSupportException(FileException):
+    pass
+
+
 class DataFileNotAvailableException(FileException):
     """Thrown when data file not available."""
     pass

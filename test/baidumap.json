@@ -20,9 +20,9 @@
             "output": "json",
             "ak": "xZHugj45kkoO4PdBK6lwL3wX"
           },
-          "validators": {
-            "eq": [2, 2]
-          }
+          "validators": [
+            {"eq": [2, 2]}
+          ]
         }
       ]
     },
@@ -47,10 +47,10 @@
             "output": "json",
             "ak": "xZHugj45kkoO4PdBK6lwL3wX"
           },
-          "validators": {
-            "in": ["$resource.assert", "$res"],
-            "eq": ["22", "22"]
-          }
+          "validators": [
+            {"in": ["$resource.assert", "$res"]},
+            {"eq": ["22", "22"]}
+          ]
         }
       ]
     }

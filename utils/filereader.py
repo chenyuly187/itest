@@ -90,10 +90,9 @@ class YamlReader(object):
 
     def _read(self):
         logger.debug('read yaml file {}'.format(self.fpath))
-        with open(self.fpath, 'r') as f:
+        with open(self.fpath, 'rb') as f:
             al = yaml.safe_load_all(f)
-            y = [x for x in al]
-            return y
+            return list(al)
 
 
 class XMLReader(object):
