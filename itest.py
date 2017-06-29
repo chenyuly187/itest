@@ -211,7 +211,6 @@ class YamlParser(object):
 
             for case in suite:
                 # print(case)
-                # todo case parse
                 case_data = list()
                 steps = list()
                 for item in lowercase_keys(case).get('testcase'):
@@ -310,8 +309,34 @@ class Runner(object):
 
 
 def main():
-    argvs = sys.argv
-    # argvs = ['itest.py', '-f', 'baidumap.yaml', '-w', '-r', 'baidumap']
+    # argvs = sys.argv
+    argvs = ['itest.py', '-f', 'baidumap.yaml', '-w', '-r', 'baidumap']
+    tp = TestProgram()
+    tp.parse_args(argvs)
+
+    if tp.testfile.split('.')[-1].lower() == 'json':
+        parser = JsonParser(tp.testfile)
+    elif tp.testfile.split('.')[-1].lower() in ['yaml', 'yml']:
+        parser = YamlParser(tp.testfile)
+    else:
+        raise FileTypeNotSupportException('文件类型不支持解析，请传入json或yaml格式配置文件')
+
+    parser.parse()
+
+    Runner(project=parser.project,
+           api_type=parser.api_type,
+           desc=parser.desc,
+           path=tp.path,
+           report=tp.report,
+           runner=tp.runner
+           ).run(testcases)
+
+
+def runwithargs(path, case_file, reporttype='web', reportfile=None):
+
+    argvs = ['itest.py', '-f', case_file, '-w', '-r', reportfile]
+    if path:
+        argvs.append(['-p', path])
     tp = TestProgram()
     tp.parse_args(argvs)
 

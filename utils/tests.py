@@ -252,7 +252,7 @@ class RestTest(Test):
                         # print('[send]\n%s' % (sub_params or sub_data))
                         res = HTTPClient(url=step_url, method=step_method, headers=step_headers).send(
                             params=sub_params, data=sub_data)
-                        # print('[receive]\n %s' % res.content.decode())
+                        # print('[receive]\n %s' % res.text)
 
                         # validate
                         step_validators = step.get('validators')
@@ -266,14 +266,14 @@ class RestTest(Test):
                                                 if '$resource' in vv:
                                                     asserts.append(line.get(vv[10:]))
                                                 elif '$res' in vv:
-                                                    asserts.append(res.content)
+                                                    asserts.append(res.text)
                                                 else:
                                                     asserts.append(vv)
                                         elif '$resource' in vvalue:
-                                            asserts = [line.get(vvalue[10:]), res.content]
+                                            asserts = [line.get(vvalue[10:]), res.text]
                                         else:
-                                            asserts = [vvalue, res.content]
-                                        logger.debug('assert %s %s %s' % (asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
+                                            asserts = [vvalue, res.text]
+                                        logger.debug('assert %s %s %s' % (asserts[0], vtype, '{}...'.format(str(asserts[1]).replace(' ', '').replace('\n', '')[:50])))
                                         self.validators[vtype](asserts[0], asserts[1])
 
                         self.after()
@@ -289,7 +289,7 @@ class RestTest(Test):
                 # print('[send]\n%s' % (step_params or step_data))
                 res = HTTPClient(url=step_url, method=step_method, headers=step_headers).send(params=step_params,
                                                                                               data=step_data)
-                # print('[receive]\n %s' % res.content.decode())
+                # print('[receive]\n %s' % res.text)
                 # validate
                 step_validators = step.get('validators')
                 if step_validators:
@@ -299,10 +299,10 @@ class RestTest(Test):
                                 if isinstance(vvalue, list):
                                     for i, vv in enumerate(vvalue):
                                         if '$res' in str(vv):
-                                            vvalue[i] = res.content
+                                            vvalue[i] = res.text
                                 else:
-                                    asserts = [vvalue, res.content]
-                                logger.debug('assert %s %s %s' % (asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
+                                    asserts = [vvalue, res.text]
+                                logger.debug('assert %s %s %s' % (asserts[0], vtype, '{}...'.format(str(asserts[1]).replace(' ', '').replace('\n', '')[:50])))
                                 self.validators[vtype](asserts[0], asserts[1])
 
                 self.after()
@@ -379,7 +379,7 @@ class SocketTest(Test):
                                         else:
                                             asserts = [vvalue, res]
 
-                                        logger.debug('assert %s %s %s' % (asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
+                                        logger.debug('assert %s %s %s' % (asserts[0], vtype, '{}...'.format(str(asserts[1]).replace(' ', '').replace('\n', '')[:50])))
                                         self.validators[vtype](asserts[0], asserts[1])
             else:
                 # debug
@@ -406,5 +406,5 @@ class SocketTest(Test):
                                     if '$resource' in vvalue:
                                         asserts = [line.get(vvalue[10:]), res]
 
-                                logger.debug('assert %s %s %s' % (asserts[0], vtype, '{}...'.format(str(asserts[1]).strip()[:20])))
+                                logger.debug('assert %s %s %s' % (asserts[0], vtype, '{}...'.format(str(asserts[1]).replace(' ', '').replace('\n', '')[:50])))
                                 self.validators[vtype](asserts[0], asserts[1])

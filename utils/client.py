@@ -43,9 +43,10 @@ class HTTPClient(object):
         """send request to url.If response 200,return response, else return None."""
         if self._check_method():
             response = self.session.request(method=self.method, url=self.url, params=params, data=data, **kwargs)
+            response.encoding = 'utf-8'
             logger.debug('{0} {1}.'.format(self.method, self.url))
             if response:
-                logger.debug('request success: {0}\n{1}'.format(response, response.content.strip().decode()))
+                logger.debug('request success: {0}\n{1}'.format(response, response.text))
                 return response
             else:
                 logger.error('request failed: get None')
@@ -110,5 +111,5 @@ class TCPClient(object):
 #     sender = HTTPClient('http://www.baidu.com', 'get')
 #     res = sender.send()
 #     print(res.status_code)
-#     print(res.content)
+#     print(res.text)
 
